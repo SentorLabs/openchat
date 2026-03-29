@@ -1,0 +1,44 @@
+{
+  "name": "openchat",
+  "version": "1.0.0",
+  "description": "Open source AI chat UI with persistent sessions, multi-provider LLM support, and cited sources.",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=20.x",
+    "npm": ">=10.x"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build --webpack",
+    "start": "next start -p ${PORT:-3000}",
+    "lint": "eslint",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.80.0",
+    "@google/generative-ai": "^0.24.1",
+    "@tailwindcss/postcss": "^4",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^20",
+    "@types/pg": "^8.20.0",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "better-sqlite3": "^12.8.0",
+    "mysql2": "^3.20.0",
+    "next": "16.2.1",
+    "openai": "^6.33.0",
+    "pg": "^8.20.0",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^2.1.9",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.1",
+    "vitest": "^2.1.9"
+  }
+}
