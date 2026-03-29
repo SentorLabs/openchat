@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OpenChat — Open Source AI Chat UI</title>
+  <meta name="description" content="Self-hostable, multi-provider AI chat with persistent sessions and automatic source citations. Deploy on any infrastructure." />
+  <meta property="og:title" content="OpenChat — Open Source AI Chat UI" />
+  <meta property="og:description" content="Self-hostable AI chat with cited sources, persistent sessions, and multi-provider LLM support." />
+  <meta property="og:type" content="website" />
+  <style>
+    /* ── Reset & base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0f1117;
+      --surface:   #1a1d27;
+      --surface2:  #21253a;
+      --border:    rgba(255,255,255,0.08);
+      --fg:        #e8eaf0;
+      --muted:     #6b7280;
+      --accent:    #3b82f6;
+      --purple:    #a855f7;
+      --indigo:    #6366f1;
+      --green:     #10b981;
+      --yellow:    #f59e0b;
+      --red:       #f87171;
+      --blue-soft: #a5b4fc;
+      --grad:      linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      --mono: 'SF Mono', 'Fira Code', 'Cascadia Code', Consolas, monospace;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--font);
+      font-size: 15px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: var(--purple); text-decoration: none; }
+    a:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+    /* ── Layout ── */
+    .container { max-width: 860px; margin: 0 auto; padding: 0 1.5rem; }
+    section { padding: 4rem 0; }
+    section + section { border-top: 1px solid var(--border); }
+
+    /* ── Nav ── */
+    nav {
+      position: sticky; top: 0; z-index: 50;
+      background: rgba(15,17,23,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      height: 3.5rem; max-width: 860px; margin: 0 auto; padding: 0 1.5rem;
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 0.6rem;
+      font-weight: 600; color: var(--fg); text-decoration: none;
+    }
+    .nav-logo-icon {
+      width: 28px; height: 28px; border-radius: 8px;
+      background: var(--grad);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 13px; color: #fff;
+      animation: pulseGlow 2.5s ease-in-out infinite;
+    }
+    .nav-links { display: flex; gap: 0.25rem; }
+    .nav-links a {
+      padding: 0.35rem 0.75rem; border-radius: 8px;
+      font-size: 0.85rem; font-weight: 500; color: var(--muted);
+      transition: color .15s, background .15s;
+    }
+    .nav-links a:hover { color: var(--fg); background: rgba(255,255,255,0.05); text-decoration: none; }
+    .nav-badge {
+      display: flex; align-items: center; gap: 6px;
+      padding: 0.25rem 0.65rem; border-radius: 999px; font-size: 0.75rem;
+      background: rgba(16,185,129,0.1); color: var(--green);
+      border: 1px solid rgba(16,185,129,0.2);
+    }
+    .nav-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+    @media (max-width: 600px) { .nav-links a:not(:first-child) { display: none; } .nav-badge { display: none; } }
+
+    /* ── Hero ── */
+    .hero {
+      text-align: center; padding: 5rem 0 4rem;
+      position: relative; overflow: hidden;
+    }
+    .hero-orb-1, .hero-orb-2 {
+      position: absolute; border-radius: 50%;
+      pointer-events: none; filter: blur(80px); opacity: 0.18;
+    }
+    .hero-orb-1 {
+      width: 600px; height: 350px;
+      top: -60px; left: 50%; transform: translateX(-50%);
+      background: radial-gradient(ellipse, #6366f1 0%, transparent 70%);
+    }
+    .hero-orb-2 {
+      width: 280px; height: 280px;
+      top: 40px; right: -60px;
+      background: radial-gradient(ellipse, #a855f7 0%, transparent 70%);
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 0.35rem 0.85rem; border-radius: 999px;
+      font-size: 0.75rem; font-weight: 500; margin-bottom: 1.75rem;
+      background: rgba(99,102,241,0.1); color: var(--blue-soft);
+      border: 1px solid rgba(99,102,241,0.3);
+    }
+    .hero-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--blue-soft); }
+    .hero-logo-row {
+      display: flex; align-items: center; justify-content: center;
+      gap: 1rem; margin-bottom: 1.25rem;
+    }
+    .hero-icon {
+      width: 64px; height: 64px; border-radius: 16px;
+      background: var(--grad);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem; font-weight: 700; color: #fff;
+      animation: pulseGlow 2.5s ease-in-out infinite;
+    }
+    .hero-title { font-size: 3rem; font-weight: 800; letter-spacing: -0.03em; color: var(--fg); }
+    .hero-subtitle {
+      font-size: 1.15rem; color: var(--muted);
+      max-width: 560px; margin: 0.85rem auto 0; line-height: 1.65;
+    }
+    .hero-subtitle strong { color: var(--purple); font-weight: 500; }
+    .hero-ctas {
+      display: flex; align-items: center; justify-content: center;
+      gap: 0.75rem; margin-top: 2rem; flex-wrap: wrap;
+    }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 0.65rem 1.35rem; border-radius: 12px;
+      font-size: 0.875rem; font-weight: 600; color: #fff;
+      background: var(--grad); transition: opacity .15s;
+      text-decoration: none;
+    }
+    .btn-primary:hover { opacity: 0.88; text-decoration: none; }
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 0.65rem 1.35rem; border-radius: 12px;
+      font-size: 0.875rem; font-weight: 500; color: var(--fg);
+      background: var(--surface); border: 1px solid var(--border);
+      transition: border-color .15s; text-decoration: none;
+    }
+    .btn-secondary:hover { border-color: rgba(168,85,247,0.4); text-decoration: none; }
+    @media (max-width: 600px) {
+      .hero-title { font-size: 2rem; }
+      .hero-icon { width: 48px; height: 48px; font-size: 1.5rem; }
+    }
+
+    /* ── Section header ── */
+    .section-label {
+      display: inline-flex; align-items: center;
+      padding: 0.25rem 0.75rem; border-radius: 999px;
+      font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em;
+      margin-bottom: 1rem;
+      background: rgba(168,85,247,0.1); color: var(--purple);
+      border: 1px solid rgba(168,85,247,0.25);
+    }
+    .section-title { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 0.5rem; }
+    .section-sub { color: var(--muted); font-size: 0.9rem; max-width: 560px; }
+
+    /* ── Architecture diagram ── */
+    .arch-box {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; overflow: hidden; margin-top: 2rem;
+    }
+    .arch-bar {
+      padding: 0.6rem 1rem; font-size: 0.72rem; color: var(--muted);
+      border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.02);
+    }
+    .arch-pre {
+      font-family: var(--mono); font-size: 0.78rem; color: #c4b5fd;
+      padding: 1.25rem 1.5rem; line-height: 1.6; overflow-x: auto;
+      white-space: pre;
+    }
+
+    /* ── Features grid ── */
+    .features-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 1rem; margin-top: 2rem;
+    }
+    @media (max-width: 700px) { .features-grid { grid-template-columns: 1fr; } }
+    @media (min-width: 500px) and (max-width: 700px) { .features-grid { grid-template-columns: repeat(2, 1fr); } }
+    .feature-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 1.25rem;
+      transition: border-color .2s;
+    }
+    .feature-card:hover { border-color: rgba(168,85,247,0.35); }
+    .feature-icon { font-size: 1.4rem; margin-bottom: 0.65rem; }
+    .feature-title { font-size: 0.875rem; font-weight: 600; margin-bottom: 0.4rem; }
+    .feature-desc { font-size: 0.8rem; color: var(--muted); line-height: 1.55; }
+
+    /* ── Code block ── */
+    .code-wrap {
+      background: rgba(0,0,0,0.55); border: 1px solid var(--border);
+      border-radius: 12px; overflow: hidden; margin-top: 0.6rem;
+    }
+    .code-bar {
+      display: flex; align-items: center; gap: 6px;
+      padding: 0.5rem 1rem; border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,0.025);
+    }
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot-r { background: #ff5f56; }
+    .dot-y { background: #ffbd2e; }
+    .dot-g { background: #27c93f; }
+    .code-lang { margin-left: auto; font-size: 0.7rem; color: var(--muted); font-family: var(--mono); }
+    .code-wrap pre {
+      margin: 0; padding: 0.9rem 1.1rem; overflow-x: auto;
+      font-family: var(--mono); font-size: 0.78rem; line-height: 1.65; color: #e2e8f0;
+      background: transparent; border: none; border-radius: 0;
+    }
+    .hl { color: #c4b5fd; } /* purple highlight */
+    .hl-g { color: #86efac; } /* green */
+    .hl-y { color: #fde68a; } /* yellow */
+    .hl-b { color: #93c5fd; } /* blue */
+    .cmt { color: #4b5563; }
+
+    /* ── Providers / DB tables ── */
+    .pill {
+      display: inline-block; padding: 0.15rem 0.5rem; border-radius: 6px;
+      font-size: 0.72rem; font-weight: 600; font-family: var(--mono);
+    }
+    .provider-row, .db-row {
+      display: flex; align-items: flex-start; gap: 1rem;
+      padding: 1rem 1.25rem; border-radius: 12px;
+      background: var(--surface); border: 1px solid var(--border);
+      margin-top: 0.75rem;
+    }
+    .provider-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 7px; }
+    .provider-name { font-size: 0.875rem; font-weight: 600; margin-bottom: 0.2rem; }
+    .provider-models { font-size: 0.78rem; color: var(--muted); font-family: var(--mono); }
+    .provider-tag {
+      margin-left: auto; flex-shrink: 0;
+      padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.72rem; font-family: var(--mono);
+    }
+
+    /* ── Env var table ── */
+    .env-table {
+      width: 100%; margin-top: 1.5rem; border-collapse: collapse;
+      border: 1px solid var(--border); border-radius: 12px; overflow: hidden;
+    }
+    .env-table th {
+      text-align: left; padding: 0.65rem 1rem; font-size: 0.78rem;
+      color: var(--muted); background: rgba(255,255,255,0.025);
+      border-bottom: 1px solid var(--border);
+    }
+    .env-table td {
+      padding: 0.65rem 1rem; font-size: 0.8rem; vertical-align: top;
+      border-bottom: 1px solid var(--border);
+    }
+    .env-table tr:last-child td { border-bottom: none; }
+    .env-table tr:nth-child(odd) td { background: var(--surface); }
+    .env-key { font-family: var(--mono); color: var(--purple); }
+    .badge-req { padding: 0.15rem 0.45rem; border-radius: 5px; font-size: 0.7rem; font-weight: 600; background: rgba(248,113,113,0.12); color: var(--red); }
+    .badge-opt { padding: 0.15rem 0.45rem; border-radius: 5px; font-size: 0.7rem; font-weight: 600; background: rgba(255,255,255,0.05); color: var(--muted); }
+
+    /* ── Deploy targets ── */
+    .deploy-card {
+      border: 1px solid var(--border); border-radius: 16px;
+      overflow: hidden; margin-top: 1.25rem;
+    }
+    .deploy-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.9rem 1.25rem; background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+    .deploy-name { font-size: 0.9rem; font-weight: 600; }
+    .deploy-badge { padding: 0.2rem 0.65rem; border-radius: 999px; font-size: 0.72rem; font-weight: 600; }
+    .deploy-body { padding: 1.25rem; background: rgba(0,0,0,0.2); }
+    .deploy-step { margin-bottom: 1rem; }
+    .deploy-step:last-child { margin-bottom: 0; }
+    .step-label {
+      font-size: 0.75rem; font-weight: 500; color: var(--muted);
+      margin-bottom: 0.4rem; display: flex; align-items: center; gap: 0.5rem;
+    }
+    .step-num {
+      width: 18px; height: 18px; border-radius: 50%; font-size: 0.65rem; font-weight: 700;
+      background: rgba(168,85,247,0.15); color: var(--purple);
+      display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+
+    /* ── Info banner ── */
+    .info-banner {
+      display: flex; gap: 0.75rem; align-items: flex-start;
+      padding: 0.9rem 1.1rem; border-radius: 10px; margin-top: 1.25rem;
+      background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.25);
+      font-size: 0.82rem; color: var(--green); line-height: 1.55;
+    }
+    .info-banner svg { flex-shrink: 0; margin-top: 1px; }
+
+    /* ── Footer CTA ── */
+    .footer-cta {
+      text-align: center; padding: 3.5rem 1.5rem;
+      position: relative; overflow: hidden;
+      background: var(--surface); border-radius: 20px;
+      border: 1px solid var(--border); margin: 0 0 4rem;
+    }
+    .footer-orb {
+      position: absolute; bottom: -60px; left: 50%; transform: translateX(-50%);
+      width: 400px; height: 200px; border-radius: 50%;
+      background: radial-gradient(ellipse, #6366f1 0%, transparent 70%);
+      filter: blur(60px); opacity: 0.15; pointer-events: none;
+    }
+    .footer-cta h2 { font-size: 1.75rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .footer-cta p { color: var(--muted); font-size: 0.9rem; margin-bottom: 1.75rem; }
+    .footer-cta-btns { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; position: relative; }
+
+    /* ── Animations ── */
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 0 10px rgba(168,85,247,0.3); }
+      50%       { box-shadow: 0 0 24px rgba(168,85,247,0.65); }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up { animation: fadeUp 0.5s ease forwards; }
+
+    /* ── Misc ── */
+    .divider { border: none; border-top: 1px solid var(--border); margin: 0; }
+    .mt-sm { margin-top: 0.5rem; }
+    .mt-md { margin-top: 1.25rem; }
+    .text-muted { color: var(--muted); }
+    .text-sm { font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+
+<!-- ── Nav ─────────────────────────────────────────────────────────── -->
+<nav>
+  <div class="nav-inner">
+    <a href="#" class="nav-logo">
+      <div class="nav-logo-icon">O</div>
+      OpenChat
+    </a>
+    <div class="nav-links">
+      <a href="#quickstart">Quick start</a>
+      <a href="#providers">Providers</a>
+      <a href="#deploy">Deploy</a>
+      <a href="#docs">Docs</a>
+    </div>
+    <div class="nav-badge">
+      <span class="nav-badge-dot"></span>
+      v0.0.2
+    </div>
+  </div>
+</nav>
+
+<!-- ── Hero ────────────────────────────────────────────────────────── -->
+<div class="hero container fade-up">
+  <div class="hero-orb-1"></div>
+  <div class="hero-orb-2"></div>
+
+  <div class="hero-badge">
+    <span class="hero-badge-dot"></span>
+    Open Source &nbsp;·&nbsp; Self-Hostable &nbsp;·&nbsp; v0.0.2
+  </div>
+
+  <div class="hero-logo-row">
+    <div class="hero-icon">O</div>
+    <h1 class="hero-title">OpenChat</h1>
+  </div>
+
+  <p class="hero-subtitle">
+    A self-hostable, multi-provider AI chat interface for
+    <strong>fact-grounded research</strong>.<br>
+    Every answer is sourced. Every session persists. You own the data.
+  </p>
+
+  <div class="hero-ctas">
+    <a href="#quickstart" class="btn-primary">
+      Get started
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+    </a>
+    <a href="https://github.com/your-org/openchat" class="btn-secondary">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.017C22 6.484 17.522 2 12 2z"/></svg>
+      GitHub
+    </a>
+    <a href="#deploy" class="btn-secondary">Deploy guide →</a>
+  </div>
+</div>
+
+<!-- ── Architecture ─────────────────────────────────────────────────── -->
+<section>
+  <div class="container">
+    <div class="section-label">How it works</div>
+    <h2 class="section-title">Architecture overview</h2>
+    <p class="section-sub">Next.js App Router on the server, your database on the backend, your LLM provider on the edge.</p>
+
+    <div class="arch-box">
+      <div class="arch-bar">Architecture — request flow</div>
+      <div class="arch-pre">  Browser
+  ┌─────────────────────────────────────────────────────────┐
+  │  Next.js App Router (React, TypeScript)                 │
+  │                                                         │
+  │  /          Chat UI · Sidebar · SourcesBanner           │
+  │  /hub       Landing &amp; docs                              │
+  │  /about     Feature overview                            │
+  │  /releases  Changelog                                   │
+  │  /settings  Runtime configuration UI                    │
+  └──────────────────┬──────────────────────────────────────┘
+                     │  HTTP / Server-Sent Events (streaming)
+  Server             ▼
+  ┌─────────────────────────────────────────────────────────┐
+  │  API Routes  (Node.js runtime)                          │
+  │                                                         │
+  │  POST /api/chat                ──►  LLM stream          │
+  │  GET  /api/sessions            ──►  list sessions       │
+  │  POST /api/sessions            ──►  create session      │
+  │  GET  /api/sessions/:id/messages ──►  load history      │
+  │  GET  /api/settings            ──►  read config         │
+  │  POST /api/settings            ──►  save config         │
+  │  POST /api/db-test             ──►  test connection     │
+  └────────┬────────────────────────────┬───────────────────┘
+           │                            │
+    ┌──────▼──────┐             ┌───────▼───────────┐
+    │  Database   │             │   LLM Provider    │
+    │             │             │                   │
+    │  PostgreSQL │             │  OpenAI           │
+    │  MySQL      │             │  Anthropic        │
+    │  SQLite     │             │  Google Gemini    │
+    └─────────────┘             │  Ollama (local)   │
+                                └───────────────────┘</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Features ─────────────────────────────────────────────────────── -->
+<section>
+  <div class="container">
+    <div class="section-label">Features</div>
+    <h2 class="section-title">Everything you need for AI research</h2>
+    <p class="section-sub">Streaming, persistence, and citations as first-class citizens. Zero vendor lock-in.</p>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">💬</div>
+        <div class="feature-title">Real-time streaming</div>
+        <div class="feature-desc">Responses stream token-by-token from your chosen model with a live typing cursor.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">💾</div>
+        <div class="feature-title">Persistent sessions</div>
+        <div class="feature-desc">Every conversation is stored in your database. Reload or restart — history is always there.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔗</div>
+        <div class="feature-title">Cited sources</div>
+        <div class="feature-desc">Every response ends with a collapsible sources banner. No unverified claims.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔌</div>
+        <div class="feature-title">Multi-provider LLM</div>
+        <div class="feature-desc">OpenAI, Anthropic, Gemini, Ollama. Switch from the Settings UI — no restart needed.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">⚙️</div>
+        <div class="feature-title">Zero-restart config</div>
+        <div class="feature-desc">Change provider, model, database, or system prompt at runtime from the Settings UI.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🚀</div>
+        <div class="feature-title">Self-hostable</div>
+        <div class="feature-desc">Local, Docker, Cloud Foundry, GCP, AWS, Azure — you own your data and your infra.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Quick Start ───────────────────────────────────────────────────── -->
+<section id="quickstart">
+  <div class="container">
+    <div class="section-label">Quick Start</div>
+    <h2 class="section-title">Up and running in minutes</h2>
+    <p class="section-sub">SQLite in-memory means you don't even need a database to try it out.</p>
+
+    <div class="mt-md">
+      <div class="step-label"><span class="step-num">1</span> Clone and install</div>
+      <div class="code-wrap">
+        <div class="code-bar"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span><span class="code-lang">bash</span></div>
+        <pre><span class="hl-g">git clone</span> https://github.com/your-org/openchat
+<span class="hl-g">cd</span> openchat
+<span class="hl-g">npm install</span></pre>
+      </div>
+    </div>
+
+    <div class="mt-md">
+      <div class="step-label"><span class="step-num">2</span> Configure environment</div>
+      <div class="code-wrap">
+        <div class="code-bar"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span><span class="code-lang">.env.local</span></div>
+        <pre><span class="hl-b">cp</span> .env.example .env.local
+
+<span class="cmt"># Minimum required</span>
+<span class="hl">DATABASE_URL</span>=:memory:      <span class="cmt"># SQLite in-memory — zero setup</span>
+<span class="hl">LLM_PROVIDER</span>=openai
+<span class="hl">LLM_MODEL</span>=gpt-4o
+<span class="hl">LLM_API_KEY</span>=sk-...</pre>
+      </div>
+    </div>
+
+    <div class="mt-md">
+      <div class="step-label"><span class="step-num">3</span> Start the server</div>
+      <div class="code-wrap">
+        <div class="code-bar"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span><span class="code-lang">bash</span></div>
+        <pre><span class="hl-g">npm run dev</span>       <span class="cmt"># development — http://localhost:3000</span>
+<span class="hl-g">npm run build</span> <span class="hl-b">&amp;&amp;</span> <span class="hl-g">npm start</span>   <span class="cmt"># production</span></pre>
+      </div>
+    </div>
+
+    <div class="info-banner">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      <span>The database schema is created automatically on first run. Open <strong>http://localhost:3000/settings</strong> to configure your LLM provider from the browser — no env var needed.</span>
+    </div>
+  </div>
+</section>
+
+<!-- ── LLM Providers ────────────────────────────────────────────────── -->
+<section id="providers">
+  <div class="container">
+    <div class="section-label">LLM Providers</div>
+    <h2 class="section-title">Bring your own model</h2>
+    <p class="section-sub">Switch providers from the Settings UI at any time — no restart, no code changes.</p>
+
+    <div class="provider-row mt-md">
+      <div class="provider-dot" style="background:#10b981"></div>
+      <div>
+        <div class="provider-name">OpenAI</div>
+        <div class="provider-models">gpt-4o &nbsp;·&nbsp; gpt-4o-mini &nbsp;·&nbsp; o3-mini</div>
+      </div>
+      <code class="provider-tag" style="background:rgba(16,185,129,0.1);color:#10b981">LLM_PROVIDER=openai</code>
+    </div>
+
+    <div class="provider-row">
+      <div class="provider-dot" style="background:#a855f7"></div>
+      <div>
+        <div class="provider-name">Anthropic</div>
+        <div class="provider-models">claude-opus-4-6 &nbsp;·&nbsp; claude-sonnet-4-6 &nbsp;·&nbsp; claude-haiku-4-5</div>
+      </div>
+      <code class="provider-tag" style="background:rgba(168,85,247,0.1);color:#a855f7">LLM_PROVIDER=anthropic</code>
+    </div>
+
+    <div class="provider-row">
+      <div class="provider-dot" style="background:#3b82f6"></div>
+      <div>
+        <div class="provider-name">Google Gemini</div>
+        <div class="provider-models">gemini-2.0-flash &nbsp;·&nbsp; gemini-1.5-pro</div>
+      </div>
+      <code class="provider-tag" style="background:rgba(59,130,246,0.1);color:#3b82f6">LLM_PROVIDER=gemini</code>
+    </div>
+
+    <div class="provider-row">
+      <div class="provider-dot" style="background:#f59e0b"></div>
+      <div>
+        <div class="provider-name">Ollama <span class="text-muted text-sm">(local)</span></div>
+        <div class="provider-models">llama3.2 &nbsp;·&nbsp; mistral &nbsp;·&nbsp; phi4 &nbsp;·&nbsp; gemma3 &nbsp;·&nbsp; any local model</div>
+      </div>
+      <code class="provider-tag" style="background:rgba(245,158,11,0.1);color:#f59e0b">LLM_PROVIDER=ollama</code>
+    </div>
+  </div>
+</section>
+
+<!-- ── Database ──────────────────────────────────────────────────────── -->
+<section id="docs">
+  <div class="container">
+    <div class="section-label">Database</div>
+    <h2 class="section-title">Your data, your database</h2>
+    <p class="section-sub">Auto-detected from the connection string. Schema is created on first run — no migrations needed.</p>
+
+    <div class="provider-row mt-md" style="flex-direction:column;gap:0.65rem">
+      <div style="display:flex;align-items:center;gap:0.75rem">
+        <div class="provider-dot" style="background:#60a5fa;margin-top:0"></div>
+        <strong>PostgreSQL</strong>
+        <span class="text-muted text-sm">— Recommended for production. Full UUID + JSONB support.</span>
+      </div>
+      <div class="code-wrap" style="margin-top:0">
+        <pre style="padding:0.6rem 1rem;font-family:var(--mono);font-size:0.78rem;color:#e2e8f0"><span class="hl">DATABASE_URL</span>=postgresql://user:pass@host:5432/openchat</pre>
+      </div>
+    </div>
+
+    <div class="provider-row" style="flex-direction:column;gap:0.65rem">
+      <div style="display:flex;align-items:center;gap:0.75rem">
+        <div class="provider-dot" style="background:#f59e0b;margin-top:0"></div>
+        <strong>MySQL</strong>
+        <span class="text-muted text-sm">— Fully supported. Placeholders translated automatically.</span>
+      </div>
+      <div class="code-wrap" style="margin-top:0">
+        <pre style="padding:0.6rem 1rem;font-family:var(--mono);font-size:0.78rem;color:#e2e8f0"><span class="hl">DATABASE_URL</span>=mysql://user:pass@host:3306/openchat</pre>
+      </div>
+    </div>
+
+    <div class="provider-row" style="flex-direction:column;gap:0.65rem">
+      <div style="display:flex;align-items:center;gap:0.75rem">
+        <div class="provider-dot" style="background:#10b981;margin-top:0"></div>
+        <strong>SQLite</strong>
+        <span class="text-muted text-sm">— Perfect for local dev. Zero setup.</span>
+      </div>
+      <div class="code-wrap" style="margin-top:0">
+        <pre style="padding:0.6rem 1rem;font-family:var(--mono);font-size:0.78rem;color:#e2e8f0"><span class="hl">DATABASE_URL</span>=/absolute/path/to/openchat.db
+<span class="hl">DATABASE_URL</span>=:memory:    <span class="cmt"># in-memory, lost on restart</span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Env vars ───────────────────────────────────────────────────────── -->
+<section>
+  <div class="container">
+    <div class="section-label">Configuration</div>
+    <h2 class="section-title">Environment variables</h2>
+    <p class="section-sub">All settings can also be configured at runtime from the Settings UI — no server restart needed.</p>
+
+    <table class="env-table">
+      <thead>
+        <tr>
+          <th>Variable</th>
+          <th>Required</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="env-key">DATABASE_URL</td>
+          <td><span class="badge-req">required</span></td>
+          <td>PostgreSQL, MySQL, or SQLite connection string (or <code>:memory:</code>)</td>
+        </tr>
+        <tr>
+          <td class="env-key">LLM_PROVIDER</td>
+          <td><span class="badge-req">required</span></td>
+          <td><code>openai</code> | <code>anthropic</code> | <code>gemini</code> | <code>ollama</code></td>
+        </tr>
+        <tr>
+          <td class="env-key">LLM_MODEL</td>
+          <td><span class="badge-req">required</span></td>
+          <td>Model name for your chosen provider (e.g. <code>gpt-4o</code>)</td>
+        </tr>
+        <tr>
+          <td class="env-key">LLM_API_KEY</td>
+          <td><span class="badge-opt">optional</span></td>
+          <td>API key — required for all providers except Ollama</td>
+        </tr>
+        <tr>
+          <td class="env-key">LLM_SYSTEM_PROMPT</td>
+          <td><span class="badge-opt">optional</span></td>
+          <td>Override the default system prompt to set AI persona or domain focus</td>
+        </tr>
+        <tr>
+          <td class="env-key">OLLAMA_BASE_URL</td>
+          <td><span class="badge-opt">optional</span></td>
+          <td>Ollama base URL — default: <code>http://localhost:11434</code></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ── Deploy ────────────────────────────────────────────────────────── -->
+<section id="deploy">
+  <div class="container">
+    <div class="section-label">Deployment</div>
+    <h2 class="section-title">Deploy anywhere</h2>
+    <p class="section-sub">Ready-to-run scripts for every major platform are in the <code>deployment/</code> folder.</p>
+
+    <!-- Local -->
+    <div class="deploy-card">
+      <div class="deploy-header">
+        <div class="deploy-name">Local / npm</div>
+        <div class="deploy-badge" style="background:rgba(16,185,129,0.1);color:#10b981;border:1px solid rgba(16,185,129,0.3)">Fastest start</div>
+      </div>
+      <div class="deploy-body">
+        <div class="deploy-step">
+          <div class="step-label"><span class="step-num">1</span> Install &amp; configure</div>
+          <div class="code-wrap">
+            <div class="code-bar"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span><span class="code-lang">bash</span></div>
+            <pre>npm install
+cp .env.example .env.local   <span class="cmt"># fill in your values</span></pre>
+          </div>
+        </div>
+        <div class="deploy-step">
+          <div class="step-label"><span class="step-num">2</span> Run</div>
+          <div class="code-wrap">
+            <div class="code-bar"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span><span class="code-lang">bash</span></div>
+            <pre>npm run dev                          <span class="cmt"># dev mode</span>
+npm run build &amp;&amp; npm start           <span class="cmt"># production</span></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Docker Compose -->
+    <div class="deploy-card">
+      <div class="deploy-header">
+        <div class="deploy-name">Docker Compose</div>
+        <div class="deploy-badge" style="background:rgba(59,130,246,0.1);color:#3b82f6;border:1px solid rgba(59,130,246,0.3)">Batteries included</div>
+      </div>
+      <div class="deploy-body">
+        <div class="deploy-step">
+          <div class="step-label"><span class="step-num">1</span> docker-compose.yml</div>
+          <div class="code-wrap">
+            <div class="code-bar"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span><span class="code-lang">yaml</span></div>
+            <pre>services:
+  app:
+    build: .
+    ports: ["3000:3000"]
+    environment:
+      <span class="hl">DATABASE_URL</span>: postgresql://postgres:secret@db:5432/openchat
+      <span class="hl">LLM_PROVIDER</span>: openai
+      <span class="hl">LLM_MODEL</span>: gpt-4o
+      <span class="hl">LLM_API_KEY</span>: ${LLM_API_KEY}
+    depends_on: [db]
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: openchat
+    volumes: [pgdata:/var/lib/postgresql/data]
+volumes:
+  pgdata:</pre>
+          </div>
+        </div>
+        <div class="deploy-step">
+          <div class="step-label"><span class="step-num">2</span> Start</div>
+          <div class="code-wrap">
+            <div class="code-bar"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span><span class="code-lang">bash</span></div>
+            <pre>LLM_API_KEY=sk-... docker compose up -d</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cloud Foundry -->
+    <div class="deploy-card">
+      <div class="deploy-header">
+        <div class="deploy-name">Cloud Foundry / SAP BTP</div>
+        <div class="deploy-badge" style="background:rgba(168,85,247,0.1);color:#a855f7;border:1px solid rgba(168,85,247,0.3)">Enterprise</div>
+      </div>
+      <div class="deploy-body">
+        <div class="deploy-step">
+          <div class="step-label"><span class="step-num">1</span> Create PostgreSQL service &amp; set env vars</div>
+          <div class="code-wrap">
+            <div class="code-bar"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span><span class="code-lang">bash</span></div>
+            <pre>cf create-service postgresql-db trial openchat-db
+cf set-env openchat LLM_PROVIDER openai
+cf set-env openchat LLM_MODEL gpt-4o
+cf set-env openchat LLM_API_KEY sk-...</pre>
+          </div>
+        </div>
+        <div class="deploy-step">
+          <div class="step-label"><span class="step-num">2</span> Push (or use the script)</div>
+          <div class="code-wrap">
+            <div class="code-bar"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span><span class="code-lang">bash</span></div>
+            <pre>cf push             <span class="cmt"># uses manifest.yml</span>
+<span class="cmt"># or automated:</span>
+bash deployment/btp.sh</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GCP -->
+    <div class="deploy-card">
+      <div class="deploy-header">
+        <div class="deploy-name">GCP Cloud Run</div>
+        <div class="deploy-badge" style="background:rgba(245,158,11,0.1);color:#f59e0b;border:1px solid rgba(245,158,11,0.3)">Serverless</div>
+      </div>
+      <div class="deploy-body">
+        <div class="deploy-step">
+          <div class="step-label"><span class="step-num">1</span> One command deploy</div>
+          <div class="code-wrap">
+            <div class="code-bar"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span><span class="code-lang">bash</span></div>
+            <pre>bash deployment/gcp.sh</pre>
+          </div>
+        </div>
+        <div class="deploy-step">
+          <div class="step-label"><span class="step-num">2</span> What it provisions</div>
+          <div class="code-wrap">
+            <div class="code-bar"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span><span class="code-lang">bash</span></div>
+            <pre><span class="cmt"># Cloud SQL (PostgreSQL) instance</span>
+<span class="cmt"># DATABASE_URL stored in Secret Manager</span>
+<span class="cmt"># Image built via Cloud Build</span>
+<span class="cmt"># Cloud Run service with Cloud SQL socket</span></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AWS -->
+    <div class="deploy-card">
+      <div class="deploy-header">
+        <div class="deploy-name">AWS App Runner</div>
+        <div class="deploy-badge" style="background:rgba(245,158,11,0.1);color:#f59e0b;border:1px solid rgba(245,158,11,0.3)">Managed</div>
+      </div>
+      <div class="deploy-body">
+        <div class="deploy-step">
+          <div class="step-label"><span class="step-num">1</span> One command deploy</div>
+          <div class="code-wrap">
+            <div class="code-bar"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span><span class="code-lang">bash</span></div>
+            <pre>bash deployment/aws.sh</pre>
+          </div>
+        </div>
+        <div class="deploy-step">
+          <div class="step-label"><span class="step-num">2</span> What it provisions</div>
+          <div class="code-wrap">
+            <div class="code-bar"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span><span class="code-lang">bash</span></div>
+            <pre><span class="cmt"># ECR repo + Docker image push</span>
+<span class="cmt"># RDS PostgreSQL instance</span>
+<span class="cmt"># Secrets Manager entry</span>
+<span class="cmt"># IAM role + App Runner service</span></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Azure -->
+    <div class="deploy-card">
+      <div class="deploy-header">
+        <div class="deploy-name">Azure Container Apps</div>
+        <div class="deploy-badge" style="background:rgba(59,130,246,0.1);color:#3b82f6;border:1px solid rgba(59,130,246,0.3)">Managed</div>
+      </div>
+      <div class="deploy-body">
+        <div class="deploy-step">
+          <div class="step-label"><span class="step-num">1</span> One command deploy</div>
+          <div class="code-wrap">
+            <div class="code-bar"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span><span class="code-lang">bash</span></div>
+            <pre>bash deployment/azure.sh</pre>
+          </div>
+        </div>
+        <div class="deploy-step">
+          <div class="step-label"><span class="step-num">2</span> What it provisions</div>
+          <div class="code-wrap">
+            <div class="code-bar"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span><span class="code-lang">bash</span></div>
+            <pre><span class="cmt"># Azure Container Registry + image build</span>
+<span class="cmt"># Azure DB for PostgreSQL Flexible Server</span>
+<span class="cmt"># Key Vault + managed identity</span>
+<span class="cmt"># Container App with ACR pull access</span></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ── Tech Stack ────────────────────────────────────────────────────── -->
+<section>
+  <div class="container">
+    <div class="section-label">Tech Stack</div>
+    <h2 class="section-title">Built on solid foundations</h2>
+    <p class="section-sub">Modern, minimal, no magic — just TypeScript, Next.js, and your database of choice.</p>
+
+    <div class="features-grid" style="margin-top:1.5rem">
+      <div class="feature-card" style="display:flex;align-items:center;gap:0.75rem;padding:1rem 1.25rem">
+        <span style="font-size:1.2rem">⚡</span>
+        <div>
+          <div class="feature-title" style="margin-bottom:0.1rem">Next.js App Router</div>
+          <div class="feature-desc">React server components + streaming API routes</div>
+        </div>
+      </div>
+      <div class="feature-card" style="display:flex;align-items:center;gap:0.75rem;padding:1rem 1.25rem">
+        <span style="font-size:1.2rem">🔷</span>
+        <div>
+          <div class="feature-title" style="margin-bottom:0.1rem">TypeScript 5</div>
+          <div class="feature-desc">Strict mode — no untyped corners</div>
+        </div>
+      </div>
+      <div class="feature-card" style="display:flex;align-items:center;gap:0.75rem;padding:1rem 1.25rem">
+        <span style="font-size:1.2rem">🎨</span>
+        <div>
+          <div class="feature-title" style="margin-bottom:0.1rem">Tailwind CSS v4</div>
+          <div class="feature-desc">Dark-mode design system, zero CSS bloat</div>
+        </div>
+      </div>
+      <div class="feature-card" style="display:flex;align-items:center;gap:0.75rem;padding:1rem 1.25rem">
+        <span style="font-size:1.2rem">🗄️</span>
+        <div>
+          <div class="feature-title" style="margin-bottom:0.1rem">Multi-dialect DB</div>
+          <div class="feature-desc">pg · mysql2 · better-sqlite3</div>
+        </div>
+      </div>
+      <div class="feature-card" style="display:flex;align-items:center;gap:0.75rem;padding:1rem 1.25rem">
+        <span style="font-size:1.2rem">🤖</span>
+        <div>
+          <div class="feature-title" style="margin-bottom:0.1rem">Pluggable LLMs</div>
+          <div class="feature-desc">OpenAI · Anthropic · Gemini · Ollama</div>
+        </div>
+      </div>
+      <div class="feature-card" style="display:flex;align-items:center;gap:0.75rem;padding:1rem 1.25rem">
+        <span style="font-size:1.2rem">🟢</span>
+        <div>
+          <div class="feature-title" style="margin-bottom:0.1rem">Node.js ≥ 20</div>
+          <div class="feature-desc">Native streaming, no extra runtime</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Footer CTA ────────────────────────────────────────────────────── -->
+<section>
+  <div class="container">
+    <div class="footer-cta">
+      <div class="footer-orb"></div>
+      <h2>Ready to start?</h2>
+      <p>Deploy in minutes — or open the chat and start researching right now.</p>
+      <div class="footer-cta-btns">
+        <a href="#quickstart" class="btn-primary">
+          Get started →
+        </a>
+        <a href="https://github.com/your-org/openchat" class="btn-secondary">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.017C22 6.484 17.522 2 12 2z"/></svg>
+          View on GitHub
+        </a>
+      </div>
+      <p style="margin-top:1.5rem;font-size:0.75rem;color:var(--muted)">Apache 2.0 License · Open Source · No telemetry</p>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>
