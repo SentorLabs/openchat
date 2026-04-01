@@ -43,7 +43,7 @@ Most chat products give you a great experience — until they change it. You hav
 ### 1. Clone and install
 
 ```bash
-git clone https://github.com/your-org/openchat.git
+git clone https://github.com/SentorLabs/openchat.git
 cd openchat
 npm install
 ```
