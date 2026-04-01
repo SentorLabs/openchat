@@ -113,7 +113,7 @@ const DEPLOY_TARGETS = [
     badgeColor: "#10b981",
     badgeBg: "rgba(16,185,129,0.1)",
     steps: [
-      { label: "Clone the repo", code: "git clone https://github.com/your-org/openchat && cd openchat" },
+      { label: "Clone the repo", code: "git clone https://github.com/SentorLabs/openchat && cd openchat" },
       { label: "Copy and fill env file", code: "cp .env.example .env.local\n# Edit .env.local with your DATABASE_URL and LLM settings" },
       { label: "Install dependencies", code: "npm install" },
       { label: "Start the app", code: "npm run dev       # development\nnpm run build && npm start  # production" },
@@ -384,7 +384,7 @@ export default function HubPage() {
         <div className="space-y-4">
           <div>
             <p className="text-xs font-medium mb-2" style={{ color: "var(--muted)" }}>1 · Clone and install</p>
-            <CodeBlock code={`git clone https://github.com/your-org/openchat
+            <CodeBlock code={`git clone https://github.com/SentorLabs/openchat
 cd openchat
 npm install`} />
           </div>
