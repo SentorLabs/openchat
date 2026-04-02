@@ -1,5 +1,10 @@
 # OpenChat
 
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](./LICENSE)
+[![Version](https://img.shields.io/badge/version-0.0.2-purple.svg)](https://github.com/SentorLabs/openchat/releases)
+[![Node](https://img.shields.io/badge/node-%E2%89%A520-brightgreen.svg)](https://nodejs.org)
+[![Stars](https://img.shields.io/github/stars/SentorLabs/openchat?style=social)](https://github.com/SentorLabs/openchat/stargazers)
+
 > If OpenChat is useful to you, consider leaving a ⭐ — it helps others find the project.
 
 **Your AI assistant. Your rules. Your experience.**
