@@ -1,5 +1,12 @@
 # OpenChat
 
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](./LICENSE)
+[![Version](https://img.shields.io/badge/version-0.0.2-purple.svg)](https://github.com/SentorLabs/openchat/releases)
+[![Node](https://img.shields.io/badge/node-%E2%89%A520-brightgreen.svg)](https://nodejs.org)
+[![Stars](https://img.shields.io/github/stars/SentorLabs/openchat?style=social)](https://github.com/SentorLabs/openchat/stargazers)
+
+> If OpenChat is useful to you, consider leaving a ⭐ — it helps others find the project.
+
 **Your AI assistant. Your rules. Your experience.**
 
 Today you can access models that answer your questions — but the experience is always someone else's. Fixed UI. Fixed prompts. Fixed personality. OpenChat is different: it gives you full ownership of the chat experience, running on whatever model you choose, deployed wherever you want, shaped exactly how you want it.
@@ -16,15 +23,13 @@ OpenChat is a free, open source chat UI with persistent session management, mult
 
 ## Screenshots
 
-**Overview — full history, instant switching**
-
-![Session sidebar](docs/screenshots/overview.png)
-
-**Chat interface — cited sources on every response**
-![Chat interface](docs/screenshots/chat.png)
-
-**Settings UI — configure provider, model, and database without restarting**
-![Settings UI](docs/screenshots/settings.png)
+<table>
+  <tr>
+    <td align="center"><b>Overview</b><br><img src="docs/screenshots/overview.png" alt="Overview"/></td>
+    <td align="center"><b>Chat — cited sources</b><br><img src="docs/screenshots/chat.png" alt="Chat"/></td>
+    <td align="center"><b>Settings</b><br><img src="docs/screenshots/settings.png" alt="Settings"/></td>
+  </tr>
+</table>
 
 ---
 
