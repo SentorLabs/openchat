@@ -22,7 +22,7 @@ export default function Nav() {
         borderColor: "var(--border)",
       }}
     >
-      <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
+      <div className="w-full px-4 h-14 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5 group">
           <span

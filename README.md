@@ -8,6 +8,26 @@ OpenChat is a free, open source chat UI with persistent session management, mult
 
 ---
 
+## How it works
+
+![OpenChat workflow](docs/screenshots/openchat_workflow.png)
+
+---
+
+## Screenshots
+
+**Overview — full history, instant switching**
+
+![Session sidebar](docs/screenshots/overview.png)
+
+**Chat interface — cited sources on every response**
+![Chat interface](docs/screenshots/chat.png)
+
+**Settings UI — configure provider, model, and database without restarting**
+![Settings UI](docs/screenshots/settings.png)
+
+---
+
 ## Why OpenChat?
 
 Most chat products give you a great experience — until they change it. You have no say in the model, the personality, or where your conversations go. OpenChat flips that:
@@ -236,6 +256,7 @@ Contributions are welcome and appreciated. OpenChat is built for the community �
 ### Reporting issues
 
 Please open an issue with:
+
 - Steps to reproduce
 - Expected vs actual behaviour
 - Your `LLM_PROVIDER` and Node.js version

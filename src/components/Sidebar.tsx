@@ -42,33 +42,55 @@ export default function Sidebar({
 
       {/* Sidebar panel */}
       <aside
-        className="flex flex-col shrink-0 z-30 transition-all duration-200"
+        className="flex flex-col shrink-0 z-30 h-full"
         style={{
-          width: isOpen ? "256px" : "0px",
-          minWidth: isOpen ? "256px" : "0px",
-          overflow: "hidden",
+          width: isOpen ? "256px" : "48px",
+          minWidth: isOpen ? "256px" : "48px",
+          transition: "width 0.2s ease, min-width 0.2s ease",
           background: "var(--surface)",
           borderRight: "1px solid var(--border)",
+          overflow: "hidden",
         }}
       >
-        <div className="flex flex-col h-full" style={{ width: "256px" }}>
-          {/* New Chat button */}
-          <div className="p-3 shrink-0">
-            <button
-              onClick={onNewChat}
-              className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium text-white transition-opacity hover:opacity-90 cursor-pointer"
-              style={{
-                background: "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
-              }}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 5v14M5 12h14" />
-              </svg>
-              New Chat
-            </button>
-          </div>
+        {/* Header: hamburger toggle only */}
+        <div
+          className="flex items-center justify-center shrink-0 h-14"
+          style={{ borderBottom: "1px solid var(--border)" }}
+        >
+          <button
+            onClick={onToggle}
+            className="p-1.5 rounded-lg transition-colors cursor-pointer"
+            style={{ color: "var(--muted)" }}
+            title={isOpen ? "Collapse sidebar" : "Expand sidebar"}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
+          </button>
+        </div>
 
-          {/* Sessions list */}
+        {/* New Chat button */}
+        <div className="p-2 shrink-0">
+          <button
+            onClick={onNewChat}
+            className="w-full flex items-center justify-center gap-2 rounded-xl text-sm font-medium text-white transition-opacity hover:opacity-90 cursor-pointer"
+            style={{
+              background: "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
+              padding: isOpen ? "10px 12px" : "10px 0",
+            }}
+            title="New Chat"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+            {isOpen && "New Chat"}
+          </button>
+        </div>
+
+        {/* Sessions list — hidden in collapsed rail */}
+        {isOpen && (
           <div className="flex-1 overflow-y-auto px-2 pb-3">
             {sessions.length === 0 && (
               <p className="text-xs px-2 py-3" style={{ color: "var(--muted)" }}>
@@ -111,7 +133,7 @@ export default function Sidebar({
               );
             })}
           </div>
-        </div>
+        )}
       </aside>
     </>
   );
