@@ -1,17 +1,24 @@
+<div align="center">
+
 # OpenChat
+
+### The open-source AI chat that shows its work.
+
+*Every answer. Cited sources. Your model. Your data. Your rules.*
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](./LICENSE)
 [![Version](https://img.shields.io/badge/version-0.0.2-purple.svg)](https://github.com/SentorLabs/openchat/releases)
 [![Node](https://img.shields.io/badge/node-%E2%89%A520-brightgreen.svg)](https://nodejs.org)
+[![CI](https://github.com/SentorLabs/openchat/actions/workflows/ci.yml/badge.svg)](https://github.com/SentorLabs/openchat/actions/workflows/ci.yml)
 [![Stars](https://img.shields.io/github/stars/SentorLabs/openchat?style=social)](https://github.com/SentorLabs/openchat/stargazers)
 
-> If OpenChat is useful to you, consider leaving a ⭐ — it helps others find the project.
+[**Quick Start**](#quick-start) · [**Features**](#features) · [**Deploy**](#deployment) · [**Contributing**](#contributing)
 
-**Your AI assistant. Your rules. Your experience.**
+</div>
 
-Today you can access models that answer your questions — but the experience is always someone else's. Fixed UI. Fixed prompts. Fixed personality. OpenChat is different: it gives you full ownership of the chat experience, running on whatever model you choose, deployed wherever you want, shaped exactly how you want it.
+---
 
-OpenChat is a free, open source chat UI with persistent session management, multi-provider LLM support, and cited sources built in. Bring your own model — Groq, OpenAI, Anthropic, Google Gemini, or a local Ollama instance — and get a production-quality research assistant that you fully control. Configure the personality, swap the model, deploy to your own infrastructure. No locked-in subscriptions, no data sent to third parties you didn't choose.
+> Tired of AI that confidently makes things up? OpenChat grounds every response in real, verifiable sources — and you own everything: the model, the data, the deployment.
 
 ---
 
@@ -35,35 +42,36 @@ OpenChat is a free, open source chat UI with persistent session management, mult
 
 ## Why OpenChat?
 
-Most chat products give you a great experience — until they change it. You have no say in the model, the personality, or where your conversations go. OpenChat flips that:
+Most AI chat tools give you a great experience — until they change it. You have no say in the model, the personality, or where your conversations go.
 
-- **You pick the model.** OpenAI, Anthropic, Gemini, Ollama, Groq — swap with one env var.
-- **You own the experience.** Override the system prompt to tune the AI's personality, tone, and focus.
-- **You own your data.** Conversations live in your own PostgreSQL database. Nothing leaves your infrastructure.
-- **You control the deployment.** Run locally, on Docker, or in the cloud. SAP BTP Cloud Foundry guide included.
+OpenChat flips that:
+
+| | OpenChat | Typical SaaS AI |
+|---|---|---|
+| Pick your model | ✅ Any provider | ❌ Locked in |
+| Own your data | ✅ Your database | ❌ Their servers |
+| Cited sources | ✅ Every response | ❌ Rarely |
+| Self-hostable | ✅ Docker / Cloud | ❌ Subscription |
+| Customise personality | ✅ Full control | ❌ Fixed prompts |
 
 ---
 
 ## Features
 
-- **Multi-provider LLM support** — Groq, OpenAI, Anthropic, Google Gemini, Ollama — zero code changes to switch
-- **Persistent sessions** — full chat history stored in PostgreSQL; survives restarts and reloads
-- **Session sidebar** — browse, switch, and create conversations from the sidebar
-- **Real-time streaming** — responses stream live with a typing cursor indicator
+- **Multi-provider LLM** — Groq, OpenAI, Anthropic, Google Gemini, Ollama — swap with one env var, zero code changes
 - **Cited sources** — every AI response includes a collapsible sources banner; no unverified claims
-- **Configurable personality** — override the default system prompt via `LLM_SYSTEM_PROMPT`
+- **Persistent sessions** — full chat history in PostgreSQL, MySQL, or SQLite; survives restarts
+- **Real-time streaming** — responses stream live with a typing cursor indicator
+- **Settings UI** — change provider, model, API key, and database from the browser — no restart needed
+- **Configurable personality** — tune the AI's tone, focus, and rules via `LLM_SYSTEM_PROMPT`
 - **Dark-mode UI** — clean, minimal interface built with Next.js 16 and Tailwind CSS v4
-- **Cloud Foundry ready** — manifest and deployment guide for SAP BTP
+- **Production-ready** — Docker, Cloud Foundry, GCP, AWS, and Azure deployment guides included
 
 ---
 
 ## Quick Start
 
-### Prerequisites
-
-- Node.js ≥ 20
-- PostgreSQL ≥ 14 (running locally or via Docker)
-- An API key for your chosen LLM provider
+> Get OpenChat running locally in under 2 minutes.
 
 ### 1. Clone and install
 
@@ -75,96 +83,61 @@ npm install
 
 ### 2. Configure environment
 
-Copy the example and fill in your values:
-
 ```bash
 cp .env.example .env.local
 ```
 
 ```env
-# Choose your provider: groq | openai | anthropic | gemini | ollama
-LLM_PROVIDER=groq
-
-# Model name for your chosen provider
+LLM_PROVIDER=groq                        # groq | openai | anthropic | gemini | ollama
 LLM_MODEL=llama-3.3-70b-versatile
-
-# API key (not required for Ollama)
 LLM_API_KEY=your_api_key_here
-
-# PostgreSQL connection string
 DATABASE_URL=postgresql://postgres:password@localhost:5432/openchat
-
-# Optional: override the default system prompt
-# LLM_SYSTEM_PROMPT="You are a helpful assistant focused on software engineering."
 ```
 
-### 3. Create the database
+### 3. Run
 
 ```bash
-createdb openchat
-```
-
-OpenChat automatically creates the required tables on first run — no manual migrations needed.
-
-### 4. Run
-
-```bash
+createdb openchat   # auto-creates tables on first run
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3000](http://localhost:3000). That's it.
 
 ---
 
-## LLM Provider Configuration
+## LLM Providers
 
-| Provider | `LLM_PROVIDER` | Example `LLM_MODEL` | Key required |
+| Provider | `LLM_PROVIDER` | Example model | Free tier |
 |---|---|---|---|
-| [Groq](https://console.groq.com) | `groq` | `llama-3.3-70b-versatile` | Yes |
-| [OpenAI](https://platform.openai.com) | `openai` | `gpt-4o` | Yes |
-| [Anthropic](https://console.anthropic.com) | `anthropic` | `claude-opus-4-6` | Yes |
-| [Google Gemini](https://aistudio.google.com) | `gemini` | `gemini-2.0-flash` | Yes |
-| [Ollama](https://ollama.com) (local) | `ollama` | `llama3.2` | No |
-
-For Ollama, also set `OLLAMA_BASE_URL` if your instance isn't on `http://localhost:11434`.
-
----
-
-## Environment Variables
-
-| Variable | Required | Default | Description |
-|---|---|---|---|
-| `LLM_PROVIDER` | Yes | `groq` | LLM backend to use |
-| `LLM_MODEL` | Yes | — | Model name for your provider |
-| `LLM_API_KEY` | Yes* | — | API key (*not needed for Ollama) |
-| `DATABASE_URL` | Yes | — | PostgreSQL connection string |
-| `LLM_SYSTEM_PROMPT` | No | Built-in | Override the AI's system prompt |
-| `OLLAMA_BASE_URL` | No | `http://localhost:11434` | Ollama base URL |
+| [Groq](https://console.groq.com) | `groq` | `llama-3.3-70b-versatile` | ✅ Yes |
+| [OpenAI](https://platform.openai.com) | `openai` | `gpt-4o` | ❌ No |
+| [Anthropic](https://console.anthropic.com) | `anthropic` | `claude-opus-4-6` | ❌ No |
+| [Google Gemini](https://aistudio.google.com) | `gemini` | `gemini-2.0-flash` | ✅ Yes |
+| [Ollama](https://ollama.com) (local) | `ollama` | `llama3.2` | ✅ Free |
 
 ---
 
 ## Customising the AI Personality
 
-The most powerful feature of OpenChat is the ability to define exactly what kind of assistant you want. Set `LLM_SYSTEM_PROMPT` to anything:
-
 ```env
-# A focused coding assistant
-LLM_SYSTEM_PROMPT="You are a senior software engineer. Answer only technical questions with code examples. Be concise."
+# Coding assistant
+LLM_SYSTEM_PROMPT="You are a senior software engineer. Answer only technical questions with code examples."
 
-# A research assistant with strict citation rules
+# Strict research analyst
 LLM_SYSTEM_PROMPT="You are a research analyst. Always cite primary sources. Never state unverified facts."
 
-# A customer support agent for your product
-LLM_SYSTEM_PROMPT="You are a support agent for Acme Corp. Only answer questions about our product. Be friendly and brief."
+# Customer support agent
+LLM_SYSTEM_PROMPT="You are a support agent for Acme Corp. Only answer questions about our product."
 ```
 
-No redeploy needed — just update the env var and restart.
+No redeploy needed — update the env var and restart.
 
 ---
 
 ## Deployment
 
-### Docker (local or server)
+<details>
+<summary><b>Docker</b></summary>
 
 ```bash
 docker build -t openchat .
@@ -176,29 +149,30 @@ docker run -p 3000:3000 \
   openchat
 ```
 
-### SAP BTP Cloud Foundry
+</details>
 
-See **[DEPLOY.md](./DEPLOY.md)** for the complete step-by-step guide including PostgreSQL deployment as a CF app and network policy configuration.
+<details>
+<summary><b>SAP BTP Cloud Foundry</b></summary>
 
-Quick summary:
+See **[DEPLOY.md](./DEPLOY.md)** for the full guide.
 
 ```bash
-# 1. Push Postgres as an internal CF app
 cf push -f deploy-postgres.yml
-
-# 2. Create the service binding
 cf create-user-provided-service openchat-db -p '{"uri":"postgresql://..."}'
-
-# 3. Push OpenChat
 cf push -f manifest.yml
-
-# 4. Network policy + env vars
 cf add-network-policy openchat --destination-app postgres-db --port 5432 --protocol tcp
 cf set-env openchat LLM_PROVIDER groq
-cf set-env openchat LLM_MODEL llama-3.3-70b-versatile
-cf set-env openchat LLM_API_KEY your_key
 cf restage openchat
 ```
+
+</details>
+
+<details>
+<summary><b>GCP / AWS / Azure</b></summary>
+
+See **[DEPLOY.md](./DEPLOY.md)** for Cloud Run, App Runner, and Container Apps guides.
+
+</details>
 
 ---
 
@@ -212,17 +186,16 @@ src/
 │   │   ├── sessions/route.ts      # List & create sessions
 │   │   └── sessions/[id]/
 │   │       └── messages/route.ts  # Load session messages
-│   ├── about/page.tsx             # About page
-│   ├── releases/page.tsx          # Changelog
+│   ├── about/page.tsx
+│   ├── releases/page.tsx
 │   ├── page.tsx                   # Main chat UI
-│   ├── layout.tsx
 │   └── globals.css
 ├── components/
 │   ├── Nav.tsx                    # Top navigation bar
 │   ├── Sidebar.tsx                # Session list panel
-│   └── SourcesBanner.tsx         # Collapsible sources banner
+│   └── SourcesBanner.tsx          # Collapsible sources banner
 └── lib/
-    ├── db.ts                      # PostgreSQL pool + schema init
+    ├── db.ts                      # Multi-database adapter (PG / MySQL / SQLite)
     ├── llm.ts                     # Unified multi-provider LLM adapter
     ├── sources.ts                 # Parse & strip [SOURCES] blocks
     └── types.ts                   # Shared TypeScript interfaces
@@ -230,48 +203,50 @@ src/
 
 ---
 
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Framework | Next.js 16 (App Router) |
+| Language | TypeScript 5 |
+| Styling | Tailwind CSS v4 |
+| Database | PostgreSQL · MySQL · SQLite |
+| LLM providers | Groq · OpenAI · Anthropic · Gemini · Ollama |
+| Runtime | Node.js ≥ 20 |
+
+---
+
 ## Contributing
 
-Contributions are welcome and appreciated. OpenChat is built for the community — if you run your own AI assistant, you know what's missing.
+OpenChat is built for the community. If you run your own AI assistant, you know what's missing — and PRs are welcome.
 
-### Getting started
+### Good first contributions
 
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feat/your-feature`
-3. Make your changes and add tests where relevant
-4. Ensure the build passes: `npm run build`
-5. Open a pull request with a clear description of the change
-
-### What we're looking for
-
-- **New LLM providers** — add support for Mistral, Cohere, Together AI, etc.
-- **UI improvements** — message formatting, markdown rendering, code highlighting
+- **New LLM providers** — Mistral, Cohere, Together AI
+- **UI improvements** — markdown rendering, code highlighting
 - **Export features** — download chat history as PDF or Markdown
 - **Auth support** — multi-user mode with authentication
-- **Docker Compose** — a ready-to-run compose file with Postgres included
-- **Bug fixes** — check the issues tab
+- **Docker Compose** — ready-to-run compose file with Postgres
 
-### Code style
+### How to contribute
 
-- TypeScript strict mode — no `any` without a comment explaining why
-- Keep components focused — one responsibility per file
-- Environment-driven configuration — no hardcoded credentials or model names
-- Test your provider integration locally before submitting
+```bash
+git checkout -b feat/your-feature
+# make your changes
+npm run test && npm run build
+# open a pull request
+```
 
 ### Reporting issues
 
-Please open an issue with:
-
-- Steps to reproduce
-- Expected vs actual behaviour
-- Your `LLM_PROVIDER` and Node.js version
-- Any relevant log output
+Open an issue with: steps to reproduce · expected vs actual · your `LLM_PROVIDER` · Node.js version.
 
 ---
 
 ## Database Schema
 
-OpenChat auto-creates these tables on first run:
+<details>
+<summary>View schema (auto-created on first run)</summary>
 
 ```sql
 CREATE TABLE sessions (
@@ -291,33 +266,20 @@ CREATE TABLE messages (
 );
 ```
 
----
-
-## Tech Stack
-
-| Layer | Technology |
-|---|---|
-| Framework | Next.js 16 (App Router) |
-| Language | TypeScript 5 |
-| Styling | Tailwind CSS v4 |
-| Database | PostgreSQL (via `node-postgres`) |
-| LLM providers | Groq, OpenAI, Anthropic, Google Gemini, Ollama |
-| Runtime | Node.js ≥ 20 |
+</details>
 
 ---
 
 ## License
 
-Apache 2.0 — see [LICENSE](./LICENSE) for details.
-
-You are free to use, modify, and distribute OpenChat for any purpose, including commercial use. If you distribute derivative works, include a copy of the license and preserve attribution notices. If you build something great on top of it, we'd love to hear about it.
+Apache 2.0 — free to use, modify, and distribute, including for commercial use. See [LICENSE](./LICENSE).
 
 ---
 
-## Acknowledgements
+<div align="center">
 
-OpenChat is a community project. Thank you to everyone who has contributed ideas, bug reports, and code. Built with Next.js, Tailwind CSS, and the open source AI ecosystem.
-
----
+**If OpenChat saves you time, a ⭐ goes a long way.**
 
 *Take control of your AI experience.*
+
+</div>
