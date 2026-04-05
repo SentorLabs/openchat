@@ -1,0 +1,64 @@
+# OpenChat — Zero-config local setup
+# Runs OpenChat + llama.cpp serving Gemma 3 (4B, Q4_K_M) with SQLite.
+# No API key needed. Everything runs on your machine.
+#
+# Usage:
+#   docker compose up
+#
+# First run downloads the Gemma 3 model (~2.5 GB). Subsequent starts are instant.
+# Chat history is persisted in ./data/openchat.db (SQLite).
+
+services:
+
+  # ── llama.cpp server ─────────────────────────────────────────────────────────
+  llm:
+    image: ghcr.io/ggerganov/llama.cpp:server
+    container_name: openchat-llm
+    volumes:
+      - ./data/models:/models
+    environment:
+      # Download Gemma 3 4B Q4_K_M on first run (~2.5 GB)
+      LLAMA_MODEL_URL: https://huggingface.co/bartowski/gemma-3-4b-it-GGUF/resolve/main/gemma-3-4b-it-Q4_K_M.gguf
+      LLAMA_MODEL: /models/gemma-3-4b-it-Q4_K_M.gguf
+    entrypoint: >
+      sh -c "
+        if [ ! -f /models/gemma-3-4b-it-Q4_K_M.gguf ]; then
+          echo 'Downloading Gemma 3 4B model (~2.5 GB)...';
+          wget -q --show-progress -O /models/gemma-3-4b-it-Q4_K_M.gguf
+          $$LLAMA_MODEL_URL;
+        fi;
+        /llama-server
+          --model /models/gemma-3-4b-it-Q4_K_M.gguf
+          --host 0.0.0.0
+          --port 8080
+          --ctx-size 8192
+          --n-predict 2048
+          --threads 4
+      "
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # ── OpenChat ──────────────────────────────────────────────────────────────────
+  openchat:
+    build: .
+    container_name: openchat-app
+    ports:
+      - "3000:3000"
+    environment:
+      # Use llama.cpp's OpenAI-compatible endpoint via the Ollama adapter
+      LLM_PROVIDER: ollama
+      LLM_MODEL: gemma-3-4b-it-Q4_K_M
+      OLLAMA_BASE_URL: http://llm:8080/v1
+      # SQLite — no database server needed
+      DATABASE_URL: /data/openchat.db
+    volumes:
+      - ./data:/data
+    depends_on:
+      llm:
+        condition: service_healthy

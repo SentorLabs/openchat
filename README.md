@@ -71,6 +71,28 @@ OpenChat flips that:
 
 ## Quick Start
 
+### Option A — One command, no API key needed
+
+Runs OpenChat locally with **Gemma 3 4B** via llama.cpp and SQLite. No account, no API key, no database setup.
+
+> First run downloads the model (~2.5 GB). Subsequent starts are instant.
+
+**Requirements:** [Docker](https://docs.docker.com/get-docker/) with Compose
+
+```bash
+git clone https://github.com/SentorLabs/openchat.git
+cd openchat
+docker compose up
+```
+
+Open [http://localhost:3000](http://localhost:3000). That's it.
+
+Chat history is persisted in `./data/openchat.db`.
+
+---
+
+### Option B — Bring your own model & database
+
 > Get OpenChat running locally in under 2 minutes.
 
 ### 1. Clone and install
