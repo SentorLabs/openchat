@@ -9,13 +9,12 @@ export async function GET() {
     await initDb();
     const sessions = await query<Session>(`
       SELECT s.id, s.title, s.created_at, s.updated_at,
-             LEFT(m.content, 80) AS last_message
+             SUBSTR((
+               SELECT content FROM messages
+               WHERE session_id = s.id
+               ORDER BY created_at DESC LIMIT 1
+             ), 1, 80) AS last_message
       FROM sessions s
-      LEFT JOIN LATERAL (
-        SELECT content FROM messages
-        WHERE session_id = s.id
-        ORDER BY created_at DESC LIMIT 1
-      ) m ON true
       ORDER BY s.updated_at DESC
       LIMIT 50
     `);
