@@ -40,7 +40,11 @@ async function createOpenAIStream(
   model: string
 ): Promise<AsyncIterable<LLMStreamChunk>> {
   const { default: OpenAI } = await import("openai");
-  const client = new OpenAI({ apiKey });
+  const client = new OpenAI({
+    apiKey,
+    // Allows pointing at llama.cpp or any other OpenAI-compatible server
+    baseURL: process.env.OPENAI_BASE_URL || undefined,
+  });
   const stream = await client.chat.completions.create({
     model: model || "gpt-4o",
     max_tokens: 4096,
