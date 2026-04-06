@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { initDb, query, getConfig } from "@/lib/db";
+import { initDb, query, getConfig, getDialect, sqlTrunc, sqlNow } from "@/lib/db";
 import { parseSources } from "@/lib/sources";
 import { createLLMStream } from "@/lib/llm";
 import type { ChatApiRequest, DbMessage } from "@/lib/types";
@@ -23,13 +23,15 @@ export async function POST(req: NextRequest) {
       [sessionId, text]
     );
 
+    const dialect = getDialect();
+
     const [{ count }] = await query<{ count: string }>(
       `SELECT COUNT(*) AS count FROM messages WHERE session_id = $1 AND role = 'user'`,
       [sessionId]
     );
     if (parseInt(count) === 1) {
       await query(
-        `UPDATE sessions SET title = LEFT($1, 60), updated_at = NOW() WHERE id = $2`,
+        `UPDATE sessions SET title = ${sqlTrunc(dialect, "$1", 60)}, updated_at = ${sqlNow(dialect)} WHERE id = $2`,
         [text, sessionId]
       );
     }
@@ -75,7 +77,7 @@ export async function POST(req: NextRequest) {
               [sessionId, accumulated, sources.length ? JSON.stringify(sources) : null]
             );
             await query(
-              `UPDATE sessions SET updated_at = NOW() WHERE id = $1`,
+              `UPDATE sessions SET updated_at = ${sqlNow(dialect)} WHERE id = $1`,
               [sessionId]
             );
           } catch (dbErr) {

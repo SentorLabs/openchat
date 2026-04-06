@@ -103,6 +103,28 @@ async function sqliteQuery<T>(url: string, sql: string, params?: unknown[]): Pro
   return [];
 }
 
+// ── Dialect-aware SQL expression helpers ──────────────────────────────────────
+
+/** Returns the current connection dialect without exposing the URL. */
+export function getDialect(): DbDialect {
+  const url = _connectionUrl || (process.env.DATABASE_URL ?? "");
+  return detectDialect(url);
+}
+
+/** Truncate a string expression to `len` characters — dialect-safe. */
+export function sqlTrunc(dialect: DbDialect, expr: string, len: number): string {
+  // LEFT() exists in Postgres and MySQL; SQLite only has SUBSTR
+  if (dialect === "sqlite") return `SUBSTR(${expr}, 1, ${len})`;
+  return `LEFT(${expr}, ${len})`;
+}
+
+/** Current-timestamp expression — dialect-safe. */
+export function sqlNow(dialect: DbDialect): string {
+  if (dialect === "sqlite") return `strftime('%Y-%m-%dT%H:%M:%fZ','now')`;
+  if (dialect === "mysql")  return `CURRENT_TIMESTAMP(3)`;
+  return `NOW()`;
+}
+
 // ── Public query function ─────────────────────────────────────────────────────
 
 let _connectionUrl = "";
@@ -115,6 +137,13 @@ export async function query<T = Row>(sql: string, params?: unknown[]): Promise<T
     case "mysql":    return mysqlQuery<T>(url, sql, params);
     case "sqlite":   return sqliteQuery<T>(url, sql, params);
   }
+}
+
+/** Insert a row and return it — works across Postgres, MySQL, and SQLite. */
+export async function insertAndReturn<T = Row>(insertSql: string, selectSql: string, params?: unknown[]): Promise<T> {
+  await query(insertSql, params);
+  const [row] = await query<T>(selectSql);
+  return row;
 }
 
 /** Update the active connection URL at runtime (called from the settings API). */

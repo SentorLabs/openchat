@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { initDb, query } from "@/lib/db";
+import { initDb, query, insertAndReturn } from "@/lib/db";
 import type { Session } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -28,10 +28,10 @@ export async function GET() {
 export async function POST() {
   try {
     await initDb();
-    const [session] = await query<Session>(`
-      INSERT INTO sessions (title) VALUES ('New Chat')
-      RETURNING id, title, created_at, updated_at
-    `);
+    const session = await insertAndReturn<Session>(
+      `INSERT INTO sessions (title) VALUES ('New Chat')`,
+      `SELECT id, title, created_at, updated_at FROM sessions ORDER BY created_at DESC LIMIT 1`
+    );
     return NextResponse.json(session);
   } catch (err) {
     console.error("POST /api/sessions error:", err);

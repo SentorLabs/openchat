@@ -44,9 +44,13 @@ else
   echo ".env.local already exists — skipping."
 fi
 
-# ── 6. Done ───────────────────────────────────────────────────────────────────
+# ── 6. Build the app ──────────────────────────────────────────────────────────
+echo "Building OpenChat..."
+npm run build
+
+# ── 7. Done ───────────────────────────────────────────────────────────────────
 echo ""
 echo "All set! Starting OpenChat..."
 echo "Open http://localhost:3000 in your browser."
 echo ""
-npm run dev
+npm start
