@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { detectDialect } from "@/lib/db";
+import { detectDialect, sqlTrunc, sqlNow } from "@/lib/db";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // detectDialect
@@ -81,7 +81,47 @@ describe("detectDialect", () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// buildInitSql (tested indirectly via detectDialect + dialect branching)
+// sqlTrunc
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("sqlTrunc", () => {
+  it("uses SUBSTR for sqlite", () => {
+    expect(sqlTrunc("sqlite", "$1", 60)).toBe("SUBSTR($1, 1, 60)");
+  });
+
+  it("uses LEFT for postgres", () => {
+    expect(sqlTrunc("postgres", "$1", 60)).toBe("LEFT($1, 60)");
+  });
+
+  it("uses LEFT for mysql", () => {
+    expect(sqlTrunc("mysql", "$1", 60)).toBe("LEFT($1, 60)");
+  });
+
+  it("respects the length argument", () => {
+    expect(sqlTrunc("sqlite", "content", 80)).toBe("SUBSTR(content, 1, 80)");
+    expect(sqlTrunc("postgres", "content", 80)).toBe("LEFT(content, 80)");
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// sqlNow
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("sqlNow", () => {
+  it("returns strftime expression for sqlite", () => {
+    expect(sqlNow("sqlite")).toBe("strftime('%Y-%m-%dT%H:%M:%fZ','now')");
+  });
+
+  it("returns CURRENT_TIMESTAMP(3) for mysql", () => {
+    expect(sqlNow("mysql")).toBe("CURRENT_TIMESTAMP(3)");
+  });
+
+  it("returns NOW() for postgres", () => {
+    expect(sqlNow("postgres")).toBe("NOW()");
+  });
+});
+
+
 // We test the placeholder translation logic that mysqlQuery and sqliteQuery use.
 // ─────────────────────────────────────────────────────────────────────────────
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type { Session } from "@/lib/types";
 
 interface SidebarProps {
@@ -7,6 +8,7 @@ interface SidebarProps {
   activeSessionId: string | null;
   onSelectSession: (id: string) => void;
   onNewChat: () => void;
+  onDeleteSession: (id: string) => void;
   isOpen: boolean;
   onToggle: () => void;
 }
@@ -26,9 +28,11 @@ export default function Sidebar({
   activeSessionId,
   onSelectSession,
   onNewChat,
+  onDeleteSession,
   isOpen,
   onToggle,
 }: SidebarProps) {
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
   return (
     <>
       {/* Mobile overlay */}
@@ -99,37 +103,62 @@ export default function Sidebar({
             )}
             {sessions.map((s) => {
               const active = s.id === activeSessionId;
+              const hovered = s.id === hoveredId;
               return (
-                <button
+                <div
                   key={s.id}
-                  onClick={() => onSelectSession(s.id)}
-                  className="w-full text-left px-3 py-2.5 rounded-lg mb-0.5 transition-colors cursor-pointer"
-                  style={{
-                    background: active ? "var(--surface-hover)" : "transparent",
-                    borderLeft: active ? "2px solid #a855f7" : "2px solid transparent",
-                  }}
+                  className="relative mb-0.5"
+                  onMouseEnter={() => setHoveredId(s.id)}
+                  onMouseLeave={() => setHoveredId(null)}
                 >
-                  <div
-                    className="text-sm font-medium truncate mb-0.5"
-                    style={{ color: active ? "var(--foreground)" : "var(--muted)" }}
+                  <button
+                    onClick={() => onSelectSession(s.id)}
+                    className="w-full text-left px-3 py-2.5 rounded-lg transition-colors cursor-pointer"
+                    style={{
+                      background: active ? "var(--surface-hover)" : "transparent",
+                      borderLeft: active ? "2px solid #a855f7" : "2px solid transparent",
+                      paddingRight: hovered ? "2rem" : undefined,
+                    }}
                   >
-                    {s.title}
-                  </div>
-                  <div className="flex items-center justify-between gap-2">
                     <div
-                      className="text-xs truncate flex-1"
-                      style={{ color: "var(--muted)", opacity: 0.6 }}
+                      className="text-sm font-medium truncate mb-0.5"
+                      style={{ color: active ? "var(--foreground)" : "var(--muted)" }}
                     >
-                      {s.last_message ?? "No messages yet"}
+                      {s.title}
                     </div>
-                    <div
-                      className="text-xs shrink-0"
-                      style={{ color: "var(--muted)", opacity: 0.5 }}
+                    <div className="flex items-center justify-between gap-2">
+                      <div
+                        className="text-xs truncate flex-1"
+                        style={{ color: "var(--muted)", opacity: 0.6 }}
+                      >
+                        {s.last_message ?? "No messages yet"}
+                      </div>
+                      <div
+                        className="text-xs shrink-0"
+                        style={{ color: "var(--muted)", opacity: 0.5 }}
+                      >
+                        {relativeDate(s.updated_at)}
+                      </div>
+                    </div>
+                  </button>
+                  {hovered && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onDeleteSession(s.id); }}
+                      className="absolute right-1 top-1/2 -translate-y-1/2 p-1 rounded transition-colors cursor-pointer"
+                      style={{ color: "var(--muted)" }}
+                      onMouseEnter={(e) => (e.currentTarget.style.color = "#ef4444")}
+                      onMouseLeave={(e) => (e.currentTarget.style.color = "var(--muted)")}
+                      title="Delete chat"
                     >
-                      {relativeDate(s.updated_at)}
-                    </div>
-                  </div>
-                </button>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="3 6 5 6 21 6" />
+                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                        <path d="M10 11v6M14 11v6" />
+                        <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
               );
             })}
           </div>

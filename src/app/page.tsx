@@ -85,6 +85,39 @@ export default function ChatPage() {
     }
   }, []);
 
+  const handleDeleteSession = useCallback(async (id: string) => {
+    try {
+      await fetch(`/api/sessions/${id}`, { method: "DELETE" });
+    } catch (err) {
+      console.error("Delete session error:", err);
+    }
+    setSessions((prev) => {
+      const remaining = prev.filter((s) => s.id !== id);
+      if (id === activeSessionId) {
+        if (remaining.length > 0) {
+          // Switch to the next available session
+          setActiveSessionId(remaining[0].id);
+          fetch(`/api/sessions/${remaining[0].id}/messages`)
+            .then((r) => r.json())
+            .then((msgs: DbMessage[]) => setMessages(msgs.map(toUIMessage)))
+            .catch(() => setMessages([]));
+        } else {
+          // No sessions left — create a fresh one
+          fetch("/api/sessions", { method: "POST" })
+            .then((r) => r.json())
+            .then((s: Session) => {
+              setSessions([s]);
+              setActiveSessionId(s.id);
+              setMessages([]);
+            })
+            .catch(() => {});
+          return [];
+        }
+      }
+      return remaining;
+    });
+  }, [activeSessionId]);
+
   const handleSelectSession = useCallback(async (id: string) => {
     if (id === activeSessionId) return;
     setActiveSessionId(id);
@@ -226,6 +259,7 @@ export default function ChatPage() {
         activeSessionId={activeSessionId}
         onSelectSession={handleSelectSession}
         onNewChat={handleNewChat}
+        onDeleteSession={handleDeleteSession}
         isOpen={sidebarOpen}
         onToggle={() => setSidebarOpen((o) => !o)}
       />
