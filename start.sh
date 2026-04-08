@@ -48,7 +48,10 @@ fi
 echo "Building OpenChat..."
 npm run build
 
-# ── 7. Done ───────────────────────────────────────────────────────────────────
+# ── 7. Copy .env.local into standalone output so the server can read it ───────
+cp .env.local .next/standalone/.env.local
+
+# ── 8. Done ───────────────────────────────────────────────────────────────────
 echo ""
 echo "All set! Starting OpenChat..."
 echo "Open http://localhost:3000 in your browser."
