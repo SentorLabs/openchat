@@ -12,6 +12,9 @@
 [![CI](https://github.com/SentorLabs/openchat/actions/workflows/ci.yml/badge.svg)](https://github.com/SentorLabs/openchat/actions/workflows/ci.yml)
 [![Stars](https://img.shields.io/github/stars/SentorLabs/openchat?style=social)](https://github.com/SentorLabs/openchat/stargazers)
 
+**If OpenChat is useful to you, a ⭐ on the repo helps others find it — thank you!**
+We're open to new ideas, feature requests, and bug reports — [open an issue](https://github.com/SentorLabs/openchat/issues) and it will be handled accordingly.
+
 [**Quick Start**](#quick-start) · [**Features**](#features) · [**Deploy**](#deployment) · [**Contributing**](#contributing)
 
 </div>
@@ -207,6 +210,7 @@ src/
 │   │   ├── chat/route.ts          # Streaming chat endpoint
 │   │   ├── sessions/route.ts      # List & create sessions
 │   │   └── sessions/[id]/
+│   │       ├── route.ts           # Delete session
 │   │       └── messages/route.ts  # Load session messages
 │   ├── about/page.tsx
 │   ├── releases/page.tsx
@@ -299,8 +303,6 @@ Apache 2.0 — free to use, modify, and distribute, including for commercial use
 ---
 
 <div align="center">
-
-**If OpenChat saves you time, a ⭐ goes a long way.**
 
 *Take control of your AI experience.*
 
